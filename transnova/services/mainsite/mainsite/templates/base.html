@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}TransNova Logistics | Baltic and North Sea freight{% endblock %}</title>
+  <meta name="description" content="TransNova Logistics: short-sea container shipping, customs brokerage and on-carriage across the Baltic and North Sea.">
+  <link rel="preload" href="/static/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/site.css">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <script src="/js/site.js" defer></script>
+  <!-- partner portal moved to separate host (OPS-412): {{ portal_url }} -->
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="wrap bar">
+      <a class="brand" href="/"><img src="/static/logo.svg" alt="" width="28" height="28">TransNova<span>Logistics</span></a>
+      <nav aria-label="Main">
+        <a href="/services"{% if page == "services.html" %} aria-current="page"{% endif %}>Services</a>
+        <a href="/tracking"{% if page == "tracking.html" %} aria-current="page"{% endif %}>Tracking</a>
+        <a href="/about"{% if page == "about.html" %} aria-current="page"{% endif %}>Company</a>
+        <a href="/careers"{% if page == "careers.html" %} aria-current="page"{% endif %}>Careers</a>
+        <a class="quote" href="/contact"{% if page == "contact.html" %} aria-current="page"{% endif %}>Request a quote</a>
+      </nav>
+    </div>
+  </header>
+  <main id="main">{% block content %}{% endblock %}</main>
+  <footer class="site-footer">
+    <div class="wrap cols">
+      <div><p class="f-head">TransNova Logistics B.V.</p><p>Waalhaven Z.z. 19<br>3089 JH Rotterdam</p><p class="f-fine">KvK 81234567 · VAT NL862345671B01</p></div>
+      <div><p class="f-head">Sales and bookings</p><p>+31 10 555 0100<br>info@transnova-logistics.example</p></div>
+      <div><p class="f-head">Customers</p><p><a href="{{ portal_url }}/login">Partner portal</a><br><a href="/tracking">Track a shipment</a><br><a href="/.well-known/security.txt">Report a security issue</a></p></div>
+    </div>
+    <div class="wrap f-fine f-last">© <span id="y">{{ year }}</span> TransNova Logistics. AEO-F certified. ISO 9001.</div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,12 @@
+# Root build context is used only by collector/, console/ (with frontend/) and the legacy dashboard/.
+# Secrets, environments and local data never enter an image.
+*
+!collector
+!console
+!frontend
+!dashboard
+**/__pycache__
+**/data
+**/tests
+frontend/node_modules
+frontend/dist

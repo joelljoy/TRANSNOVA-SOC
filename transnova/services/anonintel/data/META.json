@@ -1,0 +1,17 @@
+{
+  "sources": {
+    "tor_exits.txt": {
+      "url": "https://raw.githubusercontent.com/SecOps-Institute/Tor-IP-Addresses/master/tor-exit-nodes.lst",
+      "entries": 1746
+    },
+    "vpn_ipv4.txt": {
+      "url": "https://raw.githubusercontent.com/X4BNet/lists_vpn/main/output/vpn/ipv4.txt",
+      "entries": 11011
+    },
+    "datacenter_ipv4.txt": {
+      "url": "https://raw.githubusercontent.com/X4BNet/lists_vpn/main/output/datacenter/ipv4.txt",
+      "entries": 44598
+    }
+  },
+  "fetched_at": "2026-11-01T05:33:41Z"
+}

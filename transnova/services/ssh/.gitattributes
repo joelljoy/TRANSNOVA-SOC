@@ -1,0 +1,3 @@
+# Files baked into Linux images must keep LF line endings on Windows checkouts.
+* text=auto eol=lf
+*.json -text

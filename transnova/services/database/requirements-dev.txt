@@ -1,0 +1,6 @@
+# Everything needed to run the stack and tests without Docker.
+-r sensor/requirements.txt
+-r ../../collector/requirements.txt
+-r ../../dashboard/requirements.txt
+Faker==40.44.0
+pytest==9.2.0

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Documents - TransNova Logistics{% endblock %}
+{% block content %}
+<section class="panel narrow">
+  <h2>Upload customs document</h2>
+  <p class="muted">PDF or image, max 960 KB.</p>
+  <form method="post" action="/upload" enctype="multipart/form-data">
+    <input type="file" name="document">
+    <button class="btn" type="submit">Upload</button>
+  </form>
+</section>
+{% endblock %}

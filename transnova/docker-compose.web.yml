@@ -1,0 +1,54 @@
+# Standalone compose for the web decoy ONLY (the team compose belongs to the integrator).
+#
+# DEFAULT = ISOLATED: lab_net is `internal`, so the decoy has NO route to the internet
+# and NO port is published to the host. The simulator and collector reach it from
+# inside lab_net (decoy: 172.28.0.10:8080).
+#
+# To browse it from this machine, add the browse override (weaker isolation, see that file):
+#   docker compose -f docker-compose.web.yml -f docker-compose.web.browse.yml up -d
+name: web-decoy-dev
+
+services:
+  web-decoy:
+    build:
+      context: ./services/web
+      additional_contexts:
+        anonintel: ./services/anonintel
+    image: transnova-web-decoy:dev
+    restart: unless-stopped   # security fix F4: a crash or OOM must not leave the sensor down
+    env_file:
+      - path: ./services/web/.env
+        required: false
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    volumes:
+      - web-data:/data
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 256m
+    networks:
+      lab_net:
+        ipv4_address: 172.28.0.10
+    healthcheck:
+      # HTTPS with the container's own self-signed certificate (local loopback check only).
+      test: ["CMD", "python", "-c", "import urllib.request,ssl,sys; c=ssl.create_default_context(); c.check_hostname=False; c.verify_mode=ssl.CERT_NONE; sys.exit(0 if urllib.request.urlopen('https://127.0.0.1:8080/health',timeout=2,context=c).status==200 else 1)"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+networks:
+  lab_net:
+    internal: true          # no egress: no default gateway out of the lab
+    driver_opts:
+      # The host gets NO address on this bridge, so containers cannot reach services
+      # listening on the host either (internal alone still allowed that; PLAN P12).
+      com.docker.network.bridge.inhibit_ipv4: "true"
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+volumes:
+  web-data:

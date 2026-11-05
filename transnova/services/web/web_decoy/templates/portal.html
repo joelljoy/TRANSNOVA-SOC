@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="panel">
+  <h2>Welcome, {{ user.name }}</h2>
+  <p class="muted">{{ user.company }} &middot; Account manager: Lena Berg</p>
+  <p class="stats"><span><b>{{ shipments|length }}</b>active shipments</span><span><b>2</b>invoices due</span><span><b>1</b>on customs hold</span></p>
+  <table>
+    <thead><tr><th>Shipment</th><th>Route</th><th>Status</th><th>ETA</th></tr></thead>
+    <tbody>
+    {% for s in shipments %}
+      <tr><td><a href="/portal/shipments/{{ s.id }}">#{{ s.id }}</a></td><td>{{ s.origin }} &rarr; {{ s.destination }}</td><td>{{ s.status }}</td><td>{{ s.eta }}</td></tr>
+    {% else %}
+      <tr><td colspan="4">No active shipments.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p><a href="/download?file=manifest-template.csv">Download manifest template</a> &middot; <a href="/download?file=partner-onboarding.txt">Onboarding checklist</a></p>
+</section>
+<section class="panel">
+  <h2>Recent activity</h2>
+  <ul class="feed">
+  {% for when, text in activity %}
+    <li><span class="muted">{{ when }}</span> {{ text }}</li>
+  {% endfor %}
+  </ul>
+</section>
+{% endblock %}

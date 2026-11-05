@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="lead-in">
+  <div class="wrap lead-grid">
+    <div class="lead-copy">
+      <h1>Short-sea freight between eleven Baltic and North Sea ports, every week.</h1>
+      <p>Container sailings, customs clearance and door delivery from one Rotterdam team that has run these routes since 1988.</p>
+      <form class="track" method="get" action="/tracking">
+        <label for="n">Track a shipment</label>
+        <div class="track-row">
+          <input id="n" name="number" placeholder="Booking number, e.g. TNL50211" maxlength="40" autocomplete="off">
+          <button type="submit">Track</button>
+        </div>
+      </form>
+    </div>
+    <div class="schedule" aria-labelledby="sched-h">
+      <h2 id="sched-h">Next sailings</h2>
+      <table>
+        <thead><tr><th scope="col">Vessel</th><th scope="col">Route</th><th scope="col">Departs</th><th scope="col">Cargo cut-off</th></tr></thead>
+        <tbody>
+        {% for vessel, line, origin, dest, departs, cutoff in sailings %}
+          <tr><td>{{ vessel }} <span class="loop">{{ line }}</span></td><td>{{ origin }} → {{ dest }}</td><td class="num">{{ departs }}</td><td class="num">{{ cutoff }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      <p class="sched-note">Times are local port time. Full schedule from your sales coordinator.</p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap band">
+  <h2>Our loops</h2>
+  <dl class="loops">
+    {% for code, name, ports, freq in loops %}
+      <div><dt><span class="loop">{{ code }}</span> {{ name }}</dt><dd>{{ ports }}<span>{{ freq }}</span></dd></div>
+    {% endfor %}
+  </dl>
+</section>
+
+<section class="wrap band two">
+  <div>
+    <h2>What we handle</h2>
+    <p class="intro">Most customers book the sailing and let us take the paperwork and the last mile too. On-time arrival was 96.4% in Q3 2026.</p>
+  </div>
+  <ul class="service-list">
+    {% for name, text in services %}<li><strong>{{ name }}</strong> {{ text }}</li>{% endfor %}
+  </ul>
+</section>
+
+<section class="wrap band two">
+  <div><h2>News</h2></div>
+  <ul class="news">{% for day, title in news %}<li><time datetime="{{ day }}">{{ day }}</time><span>{{ title }}</span></li>{% endfor %}</ul>
+</section>
+{% endblock %}

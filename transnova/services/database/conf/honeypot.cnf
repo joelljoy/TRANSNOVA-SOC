@@ -1,0 +1,37 @@
+# MariaDB configuration for the database honeypot.
+[mariadb]
+# --- Containment
+local_infile       = 0        # LOAD DATA LOCAL off
+secure_file_priv   = /var/lib/mysql-no-file-io  # empty and root-owned: nothing to read or write
+symbolic_links     = 0
+skip_name_resolve  = 1        # audit records show the client IP, and no DNS lookups leave the lab
+max_connections    = 60
+max_connect_errors = 100000   # do not silently host-block a brute force we want to watch
+
+# --- Telemetry 1: audit plugin. PRIMARY source for the sensor. Unlike the general log it
+# records the client host and the server's return code on every line, so denied statements
+# and failed logins are visible as such.
+plugin_load_add = server_audit
+server_audit    = FORCE_PLUS_PERMANENT   # cannot be unloaded at runtime
+server_audit_logging          = ON
+# TABLE adds a READ line naming each table the server really opened. It is the only record of
+# what EXECUTE IMMEDIATE ran: for dynamic SQL the QUERY line shows just the wrapper.
+server_audit_events           = CONNECT,QUERY,TABLE
+server_audit_output_type      = FILE
+server_audit_file_path        = /var/log/mysql/server_audit.log
+server_audit_file_rotate_size = 50M
+server_audit_file_rotations   = 3
+# The plugin cuts longer statements silently, so padding could push a table name out of the
+# log. A statement cannot exceed max_allowed_packet, and escaping at most doubles its length,
+# so this limit is never reached.
+server_audit_query_log_limit  = 131072
+max_allowed_packet            = 64K
+
+# --- Telemetry 2: general log. Kept as unprocessed evidence to show judges; not parsed.
+general_log      = 1
+general_log_file = /var/log/mysql/general.log
+log_output       = FILE
+
+# --- Telemetry 3: error log. log_warnings=4 adds "Access denied" lines.
+log_error    = /var/log/mysql/error.log
+log_warnings = 4

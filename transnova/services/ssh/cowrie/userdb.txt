@@ -1,0 +1,11 @@
+# Cowrie credential policy for the decoy (format: user:x:password).
+# A leading "!" on the password denies; "*" matches anything.
+# All accounts and passwords are synthetic lab values.
+#
+# root and admin are never accepted, so password guessing against them only
+# produces cowrie.login.failed events.
+root:x:!*
+admin:x:!*
+# The weak "backup" account is the intended way in. It exists in the emulated
+# /etc/passwd with home /var/backups, where the decoy files live.
+backup:x:Backup@2024

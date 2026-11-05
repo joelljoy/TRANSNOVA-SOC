@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Release notes - TransNova Logistics{% endblock %}
+{% block content %}
+<section class="panel">
+  <h2>Release notes</h2>
+  {% for version, day, items in changelog %}
+    <h3>{{ version }} <span class="muted">{{ day }}</span></h3>
+    <ul>{% for item in items %}<li>{{ item }}</li>{% endfor %}</ul>
+  {% endfor %}
+</section>
+{% endblock %}

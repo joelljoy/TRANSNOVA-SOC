@@ -1,0 +1,5 @@
+# A CRLF shell script or SQL file breaks the MariaDB init step on Windows checkouts.
+*.sh   text eol=lf
+*.sql  text eol=lf
+*.tmpl text eol=lf
+*.cnf  text eol=lf

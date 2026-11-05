@@ -1,0 +1,4 @@
+billing-api deploy checklist
+- pull release tag
+- copy .env from this dir
+- restart billing-api.service

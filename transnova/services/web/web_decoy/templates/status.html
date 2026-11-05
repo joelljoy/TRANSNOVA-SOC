@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Service status - TransNova Logistics{% endblock %}
+{% block content %}
+<section class="panel">
+  <h2>Service status</h2>
+  <p class="muted">Updated {{ updated }} minutes ago.</p>
+  {% if bait %}<p class="small muted">Reporting replica: last export <a href="{{ bait }}">{{ bait.rsplit('/', 1)[1] }}</a> (ops access).</p>{% endif %}
+  <table>
+    <tbody>
+    {% for name, state in components %}
+      <tr><td>{{ name }}</td><td class="{% if state == 'Operational' %}ok{% else %}warn{% endif %}">{{ state }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+<section class="panel">
+  <h2>Past incidents</h2>
+  <ul class="feed">
+  {% for day, title, text in incidents %}
+    <li><span class="muted">{{ day }}</span> <strong>{{ title }}</strong> &mdash; {{ text }}</li>
+  {% endfor %}
+  </ul>
+</section>
+{% endblock %}

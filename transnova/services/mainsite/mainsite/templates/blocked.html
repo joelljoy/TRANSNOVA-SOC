@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Access restricted | TransNova Logistics{% endblock %}
+{% block content %}
+<section class="wrap page narrow">
+  <h1>Access restricted</h1>
+  {% if category == "policy" %}
+  <p>Your connection was refused by our security policy.</p>
+  <p>If you think this is a mistake, contact security@transnova-logistics.example and quote the time of your visit.</p>
+  {% else %}
+  <p>For security reasons this site does not accept connections from anonymising networks (Tor, VPN services or hosting providers).</p>
+  <p>Please disconnect from the {{ "Tor network" if category == "tor" else ("VPN" if category == "vpn" else "proxy or cloud server") }} and try again. If you think this is a mistake, contact security@transnova-logistics.example.</p>
+  {% endif %}
+</section>
+{% endblock %}

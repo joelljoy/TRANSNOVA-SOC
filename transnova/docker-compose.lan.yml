@@ -1,0 +1,41 @@
+# TWO-LAPTOP ADD-ON: lets another laptop on the hotspot attack the SSH and DB honeypots, and lets the
+# friend's web honeypot / main site reach this collector. Use with the team compose on the DASHBOARD laptop:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.lan.yml up -d --build collector console ssh-honeypot ssh-sensor database-honeypot db-sensor
+#
+# Opens on this laptop's network address (all interfaces):
+#   2222 -> Cowrie SSH honeypot      3307 -> MariaDB honeypot      8000 -> collector (web token required for web events)
+# The dashboard itself stays on 127.0.0.1:8501.
+#
+# Trade-offs, accepted by the owner on 2026-11-01:
+# - Docker cannot publish a port from an `internal` network, so the SSH and DB honeypots also join a
+#   normal network while this add-on is on: they get a route out (same as the browse overrides).
+# - Docker Desktop shows outside attackers with the Docker gateway address, not their real IP.
+# Without this file the team compose stays fully sealed.
+services:
+  collector:
+    environment:
+      WEB_INGEST_TOKEN_FILE: /run/secrets/web_ingest_token
+    secrets: [soc_read_token, soc_console_token, ssh_ingest_token, web_ingest_token]
+    ports: !override
+      - "0.0.0.0:8000:8000"
+
+  ssh-honeypot:
+    ports:
+      - "0.0.0.0:2222:2222"
+    networks:
+      ssh_edge: {}
+
+  database-honeypot:
+    ports:
+      - "0.0.0.0:3307:3306"
+    networks:
+      db_edge: {}
+
+secrets:
+  web_ingest_token:
+    file: ./secrets/web.token
+
+networks:
+  ssh_edge: {}
+  db_edge: {}

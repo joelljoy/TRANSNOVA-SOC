@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} | TransNova Logistics{% endblock %}
+{% block content %}
+<section class="wrap page narrow">
+  <h1>{% if code == 404 %}Page not found{% elif code == 500 %}Something went wrong{% else %}Request not accepted{% endif %}</h1>
+  <p><a href="/">Back to the home page</a></p>
+</section>
+{% endblock %}

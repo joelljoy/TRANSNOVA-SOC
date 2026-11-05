@@ -1,0 +1,7 @@
+# Keep LF line endings on every OS. Windows CRLF checkouts break Dockerfile
+# shell lines and can append '\r' to values read from .env files.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.cmd text eol=crlf
+*.ps1 text eol=crlf

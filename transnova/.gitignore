@@ -1,0 +1,27 @@
+.env
+# Synthetic honeytoken baked into the SSH decoy image. Not a real credential.
+!services/ssh/cowrie/decoy-fs/var/backups/app/.env
+__pycache__/
+*.pyc
+.pytest_cache/
+data/
+.venv-db/
+secrets/
+.venv-soc/
+frontend/node_modules/
+frontend/dist/
+.impeccable/questions/
+**/.venv/
+# Local leftovers from manual web-decoy testing (cookie jars, upload probes)
+jar.txt
+services/web/jar.txt
+services/web/big.bin
+services/web/big.txt
+services/web/slow.txt
+services/web/avatar.jpg
+
+# Tor/VPN/hosting list snapshot is source data, not runtime output (the rule above would hide it).
+!services/anonintel/data/
+!services/anonintel/data/**
+!.claude/skills/impeccable/scripts/data/
+!.claude/skills/impeccable/scripts/data/**

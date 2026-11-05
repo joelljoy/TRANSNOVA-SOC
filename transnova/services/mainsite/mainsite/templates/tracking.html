@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Track a shipment | TransNova Logistics{% endblock %}
+{% block content %}
+<section class="wrap page narrow">
+  <h1>Track a shipment</h1>
+  <form method="get" action="/tracking" class="stack">
+    <label for="number">Booking or shipment number</label>
+    <input id="number" name="number" value="{{ number }}" placeholder="TNL50211" maxlength="40">
+    <button type="submit">Track</button>
+  </form>
+  {% if result %}
+    <div class="result">
+      <h2>{{ clean }} &middot; {{ result.status }}</h2>
+      <p>{{ result.route }} &middot; ETA {{ result.eta }}</p>
+      <ol class="timeline">{% for day, step in result.steps %}<li><time>{{ day }}</time> {{ step }}</li>{% endfor %}</ol>
+      <p class="muted">Customers with a partner account see documents and invoices in the partner portal.</p>
+    </div>
+  {% elif number %}
+    <p class="muted">No shipment found for &ldquo;{{ number }}&rdquo;. Check the number on your booking confirmation.</p>
+  {% endif %}
+</section>
+{% endblock %}

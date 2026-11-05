@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Careers | TransNova Logistics{% endblock %}
+{% block content %}
+<section class="wrap page narrow">
+  <h1>Careers</h1>
+  <p>We are a team of 310 people across three countries. Open roles:</p>
+  <table class="jobs"><thead><tr><th>Role</th><th>Location</th><th>Type</th></tr></thead><tbody>
+  {% for role, place, kind in jobs %}<tr><td>{{ role }}</td><td>{{ place }}</td><td>{{ kind }}</td></tr>{% endfor %}
+  </tbody></table>
+  <p>Send your CV to careers@transnova-logistics.example.</p>
+</section>
+{% endblock %}

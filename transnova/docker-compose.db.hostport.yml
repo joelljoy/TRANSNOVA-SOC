@@ -1,0 +1,18 @@
+# OPTIONAL: reach the database honeypot with a MySQL client on THIS machine.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.db.hostport.yml up -d
+#   mysql -h 127.0.0.1 -P 3307 -u decoy_user -p transnova_logistics
+#
+# Trade-off (same as docker-compose.web.browse.yml): Docker cannot publish a port from an
+# internal network, so this attaches the honeypot to a non-internal network. While this
+# override is active the container HAS a route out. Traffic shows the Docker gateway as its
+# source IP. Use it for testing; the isolated demo uses the db-attacker container.
+services:
+  database-honeypot:
+    ports:
+      - "127.0.0.1:3307:3306"
+    networks:
+      db_edge: {}
+
+networks:
+  db_edge: {}

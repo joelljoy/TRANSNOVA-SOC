@@ -1,0 +1,83 @@
+# Stage 2 isolated test of the SSH honeypot. Separate project from soc-lab.
+#
+#   docker compose -f services/ssh/docker-compose.isolated.yml up -d --build
+#
+# ssh_isolated_net has no route out and no path to soc-lab. No port is published.
+# ssh-sensor has no network at all: it only reads Cowrie's log volume, so nothing can reach
+# the shared collector. Never add a collector URL or token here.
+#
+# Nothing typed by an attacker is kept outside cowrie.json, which is cleaned first:
+# piped input, redirects and uploads stay in memory (downloads is tmpfs and is lost on
+# restart), and Docker stores no log for the decoy.
+name: soc-ssh-isolated
+
+services:
+  ssh-honeypot:
+    build: ./cowrie
+    image: soc-cowrie-ssh:dev
+    container_name: ssh-honeypot
+    restart: unless-stopped
+    environment:
+      COWRIE_HONEYPOT_SENSOR_NAME: ssh-01
+    volumes:
+      - ssh-logs:/cowrie/cowrie-git/var/log/cowrie
+      - ssh-state:/cowrie/cowrie-git/var/lib/cowrie
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+      - /cowrie/cowrie-git/var/lib/cowrie/downloads:size=16m,mode=0700,uid=999,gid=999,noexec,nosuid,nodev
+    logging:
+      driver: none
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    mem_limit: 512m
+    cpus: 1.0
+    networks:
+      ssh_isolated_net:
+        ipv4_address: 172.31.77.20
+
+  ssh-sensor:
+    build: ./sensor
+    image: soc-ssh-sensor:dev
+    container_name: ssh-sensor
+    restart: unless-stopped
+    command: ["run", "--config", "/app/config/collector.toml"]
+    depends_on:
+      ssh-honeypot:
+        condition: service_started
+    environment:
+      COWRIE_SOC_SENSOR_ID: ssh-01
+    volumes:
+      - ssh-logs:/data/cowrie-logs:ro
+      - ssh-sensor-data:/data/state
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m
+    logging:
+      driver: local
+      options:
+        max-size: 5m
+        max-file: "2"
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    mem_limit: 256m
+    cpus: 0.5
+    network_mode: none
+
+networks:
+  ssh_isolated_net:
+    internal: true
+    driver_opts:
+      com.docker.network.bridge.inhibit_ipv4: "true"
+    ipam:
+      config:
+        - subnet: 172.31.77.0/24
+
+volumes:
+  ssh-logs:
+  ssh-state:
+  ssh-sensor-data:

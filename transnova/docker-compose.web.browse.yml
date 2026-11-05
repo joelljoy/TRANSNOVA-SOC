@@ -1,0 +1,18 @@
+# OPTIONAL override for manual browsing from THIS machine only.
+#
+#   docker compose -f docker-compose.web.yml -f docker-compose.web.browse.yml up -d
+#   then open https://127.0.0.1:8080 (self-signed certificate: the browser warns once; accept for the lab)
+#
+# Trade-off (stated, not hidden): Docker cannot publish a port from an internal-only
+# network, so this attaches the decoy to an extra non-internal `edge` network. While
+# this override is active the container HAS a route out. Use it for click-through
+# testing, not for the isolated demo. The port is bound to 127.0.0.1 only.
+services:
+  web-decoy:
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks:
+      edge: {}
+
+networks:
+  edge: {}

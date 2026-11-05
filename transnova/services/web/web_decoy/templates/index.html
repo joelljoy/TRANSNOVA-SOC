@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<p class="notice"><strong>{{ announcements[0][0] }}.</strong> {{ announcements[0][1] }}</p>
+<div class="cols">
+  <section class="box signin">
+    <h1>Partner Portal</h1>
+    <p class="muted">Shipments, manifests, customs documents and invoices for TransNova contract customers.</p>
+    <form method="post" action="/login">
+      <input type="hidden" name="realm" value="partner">
+      <label>Username <input name="username" autocomplete="username" required maxlength="128"></label>
+      <label>Password <input name="password" type="password" autocomplete="current-password" required maxlength="128"></label>
+      <button class="btn" type="submit">Sign in</button>
+    </form>
+    <p class="small muted">No account? Accounts are issued by your account manager. <a href="/help">Request access</a></p>
+  </section>
+  <div class="side">
+    <section class="box">
+      <h2>Notices</h2>
+      <ul class="rows">
+      {% for title, text in announcements %}
+        <li><strong>{{ title }}</strong><span>{{ text }}</span></li>
+      {% endfor %}
+      </ul>
+    </section>
+    <section class="box">
+      <h2>Systems</h2>
+      <p class="small">Carrier EDI last synchronised {{ last_sync }} min ago. EDI gateway running with delays. <a href="/status">Details</a></p>
+      {% if bait %}<p class="small">Nightly ERP replica export (ops): <a href="{{ bait }}">{{ bait.rsplit('/', 1)[1] }}</a></p>{% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}

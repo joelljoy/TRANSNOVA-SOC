@@ -1,0 +1,49 @@
+-- Account setup. @@NAME@@ placeholders are filled by 03_accounts.sh (or the native test
+-- harness) from the environment. Passwords never live in the repository.
+
+-- Attacker-facing account: read-only, and only on the 23 initial tables. Grants are
+-- table-level on purpose: a database-level GRANT would also cover the adaptive decoys.
+CREATE USER 'decoy_user'@'@@DECOY_HOST@@' IDENTIFIED BY '@@DECOY_PASSWORD@@'
+  WITH MAX_USER_CONNECTIONS 10 MAX_STATEMENT_TIME 5;
+
+GRANT SELECT ON transnova_logistics.customers TO 'decoy_user'@'@@DECOY_HOST@@';
+GRANT SELECT ON transnova_logistics.shipments TO 'decoy_user'@'@@DECOY_HOST@@';
+GRANT SELECT ON transnova_logistics.shipment_items TO 'decoy_user'@'@@DECOY_HOST@@';
+GRANT SELECT ON transnova_logistics.tracking_events TO 'decoy_user'@'@@DECOY_HOST@@';
+GRANT SELECT ON transnova_logistics.delivery_addresses TO 'decoy_user'@'@@DECOY_HOST@@';
+GRANT SELECT ON transnova_logistics.invoices TO 'decoy_user'@'@@DECOY_HOST@@';
+GRANT SELECT ON transnova_logistics.payments TO 'decoy_user'@'@@DECOY_HOST@@';
+GRANT SELECT ON transnova_logistics.employees TO 'decoy_user'@'@@DECOY_HOST@@';
+GRANT SELECT ON transnova_logistics.delivery_agents TO 'decoy_user'@'@@DECOY_HOST@@';
+GRANT SELECT ON transnova_logistics.vehicles TO 'decoy_user'@'@@DECOY_HOST@@';
+GRANT SELECT ON transnova_logistics.warehouses TO 'decoy_user'@'@@DECOY_HOST@@';
+GRANT SELECT ON transnova_logistics.inventory TO 'decoy_user'@'@@DECOY_HOST@@';
+GRANT SELECT ON transnova_logistics.routes TO 'decoy_user'@'@@DECOY_HOST@@';
+GRANT SELECT ON transnova_logistics.dispatch_records TO 'decoy_user'@'@@DECOY_HOST@@';
+GRANT SELECT ON transnova_logistics.maintenance_records TO 'decoy_user'@'@@DECOY_HOST@@';
+GRANT SELECT ON transnova_logistics.shipping_partners TO 'decoy_user'@'@@DECOY_HOST@@';
+GRANT SELECT ON transnova_logistics.support_tickets TO 'decoy_user'@'@@DECOY_HOST@@';
+GRANT SELECT ON transnova_logistics.api_integrations TO 'decoy_user'@'@@DECOY_HOST@@';
+GRANT SELECT ON transnova_logistics.api_credentials TO 'decoy_user'@'@@DECOY_HOST@@';
+GRANT SELECT ON transnova_logistics.admin_accounts TO 'decoy_user'@'@@DECOY_HOST@@';
+GRANT SELECT ON transnova_logistics.warehouse_access TO 'decoy_user'@'@@DECOY_HOST@@';
+GRANT SELECT ON transnova_logistics.partner_contracts TO 'decoy_user'@'@@DECOY_HOST@@';
+GRANT SELECT ON transnova_logistics.internal_network_assets TO 'decoy_user'@'@@DECOY_HOST@@';
+
+-- Controller account: usable only from the sensor's fixed address. It can do exactly one
+-- thing: pass SELECT on the 8 adaptive tables to someone else, and read the grant table to
+-- verify. It has no global privileges and cannot create users.
+CREATE USER 'deception_ctrl'@'@@CONTROLLER_HOST@@' IDENTIFIED BY '@@CONTROLLER_PASSWORD@@'
+  WITH MAX_USER_CONNECTIONS 3;
+
+GRANT SELECT ON transnova_logistics.shipment_archive TO 'deception_ctrl'@'@@CONTROLLER_HOST@@' WITH GRANT OPTION;
+GRANT SELECT ON transnova_logistics.premium_customer_records TO 'deception_ctrl'@'@@CONTROLLER_HOST@@' WITH GRANT OPTION;
+GRANT SELECT ON transnova_logistics.restricted_routes TO 'deception_ctrl'@'@@CONTROLLER_HOST@@' WITH GRANT OPTION;
+GRANT SELECT ON transnova_logistics.backup_credentials TO 'deception_ctrl'@'@@CONTROLLER_HOST@@' WITH GRANT OPTION;
+GRANT SELECT ON transnova_logistics.warehouse_security_logs TO 'deception_ctrl'@'@@CONTROLLER_HOST@@' WITH GRANT OPTION;
+GRANT SELECT ON transnova_logistics.internal_transfer_records TO 'deception_ctrl'@'@@CONTROLLER_HOST@@' WITH GRANT OPTION;
+GRANT SELECT ON transnova_logistics.executive_shipments TO 'deception_ctrl'@'@@CONTROLLER_HOST@@' WITH GRANT OPTION;
+GRANT SELECT ON transnova_logistics.disaster_recovery_backup TO 'deception_ctrl'@'@@CONTROLLER_HOST@@' WITH GRANT OPTION;
+GRANT SELECT ON mysql.tables_priv TO 'deception_ctrl'@'@@CONTROLLER_HOST@@';
+
+FLUSH PRIVILEGES;

@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ps04.event.v0.1",
+  "title": "PS04 normalized event (Cowrie SSH sensor) - PROPOSED, not yet agreed by the team",
+  "type": "object",
+  "required": [
+    "record_type", "schema_version", "event_id", "timestamp", "ingested_at", "source_service",
+    "source_product", "sensor_id", "session_id", "event_type", "category", "details", "attack", "raw"
+  ],
+  "properties": {
+    "record_type": { "const": "event" },
+    "schema_version": { "const": "ps04.event.v0.1" },
+    "event_id": { "type": "string", "format": "uuid", "description": "UUIDv5 of the raw line's SHA-256; identical across re-deliveries" },
+    "timestamp": { "type": "string", "format": "date-time", "description": "When Cowrie observed the event (UTC)" },
+    "ingested_at": { "type": "string", "format": "date-time", "description": "When the collector normalized it" },
+    "source_service": { "const": "ssh" },
+    "source_product": { "const": "cowrie" },
+    "sensor_id": { "type": "string" },
+    "source_ip": { "type": ["string", "null"], "description": "Client IP as seen by Cowrie (see deployment notes on NAT)" },
+    "source_port": { "type": ["integer", "null"] },
+    "dest_ip": { "type": ["string", "null"], "description": "Decoy container IP" },
+    "dest_port": { "type": ["integer", "null"] },
+    "protocol": { "type": "string" },
+    "session_id": { "type": "string", "description": "Cowrie session id; one per TCP connection" },
+    "event_type": {
+      "enum": [
+        "ssh_connection", "session_closed", "client_version", "client_kex", "publickey_offered",
+        "terminal_size", "client_env_var", "session_params", "authentication_failure",
+        "authentication_success", "shell_command", "shell_command_not_found", "file_download",
+        "file_upload", "port_forward_request", "port_forward_data", "tty_log_closed", "cowrie_other"
+      ]
+    },
+    "category": {
+      "enum": ["connection", "client_fingerprint", "authentication", "session", "command", "file_transfer", "network", "other"]
+    },
+    "outcome": { "enum": ["success", "failure", null] },
+    "username": { "type": ["string", "null"] },
+    "password": { "type": ["string", "null"], "description": "Password tried against the decoy (attacker input); null when redaction is enabled" },
+    "command": { "type": ["string", "null"], "description": "Exact line typed in the emulated shell (untrusted text)" },
+    "message": { "type": ["string", "null"] },
+    "attack": {
+      "type": "array",
+      "description": "ATT&CK techniques supported by THIS event's evidence (shell commands only)",
+      "items": { "$ref": "#/$defs/technique" }
+    },
+    "details": { "type": "object", "description": "Remaining Cowrie fields (hassh, client_version, duration_ms, ttylog, url, command_analysis ...)" },
+    "scenario_id": { "type": ["string", "null"] },
+    "truncated_fields": { "type": "array", "items": { "type": "string" } },
+    "raw": {
+      "type": "object",
+      "required": ["format", "cowrie_eventid", "sha256", "ref", "event"],
+      "properties": {
+        "format": { "const": "cowrie-json" },
+        "cowrie_eventid": { "type": "string" },
+        "cowrie_sensor": { "type": ["string", "null"] },
+        "sha256": { "type": "string", "description": "SHA-256 of the original log line bytes" },
+        "ref": {
+          "type": "object",
+          "properties": { "file": { "type": "string" }, "offset": { "type": "integer" } },
+          "description": "Log file name and byte offset of the original line"
+        },
+        "event": { "type": "object", "description": "The original Cowrie JSON object, verbatim" },
+        "redacted": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "$defs": {
+    "technique": {
+      "type": "object",
+      "required": ["technique_id", "name", "tactic"],
+      "properties": {
+        "technique_id": { "type": "string", "pattern": "^T\\d{4}(\\.\\d{3})?$" },
+        "name": { "type": "string" },
+        "tactic": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,7 @@
+Metadata-Version: 2.4
+Name: cowrie-soc
+Version: 0.1.0
+Summary: Cowrie SSH honeypot log collector, normalizer and detector for the PS04 SOC pipeline
+Requires-Python: >=3.11
+Provides-Extra: test
+Requires-Dist: pytest>=8; extra == "test"

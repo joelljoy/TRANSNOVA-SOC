@@ -1,0 +1,2 @@
+orders DB backups - rotated after 14 days by mysql_nightly.sh
+restore: gunzip -c orders_<date>.sql.gz | mysql orders

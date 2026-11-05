@@ -1,0 +1,2 @@
+[console_scripts]
+cowrie-soc = cowrie_soc.cli:main

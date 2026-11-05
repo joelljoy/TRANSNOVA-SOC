@@ -1,0 +1,170 @@
+{
+  "source": "cowrie-ssh",
+  "sensor_id": "cowrie-ssh-01",
+  "sent_at": "2026-10-31T18:37:32.935240Z",
+  "count": 3,
+  "records": [
+    {
+      "record_type": "event",
+      "schema_version": "ps04.event.v0.1",
+      "event_id": "ab31ba2c-0670-5751-b61e-935c3220e1d9",
+      "timestamp": "2026-10-31T18:29:33.489650Z",
+      "ingested_at": "2026-10-31T18:29:33.683311Z",
+      "source_service": "ssh",
+      "source_product": "cowrie",
+      "sensor_id": "cowrie-ssh-01",
+      "source_ip": "172.19.0.1",
+      "source_port": 49338,
+      "dest_ip": "172.19.0.2",
+      "dest_port": 2222,
+      "protocol": "ssh",
+      "session_id": "15a94155a0e7",
+      "event_type": "authentication_failure",
+      "category": "authentication",
+      "outcome": "failure",
+      "username": "root",
+      "password": "not-the-password",
+      "command": null,
+      "message": "login attempt [root/not-the-password] failed",
+      "attack": [],
+      "details": {},
+      "scenario_id": null,
+      "raw": {
+        "format": "cowrie-json",
+        "cowrie_eventid": "cowrie.login.failed",
+        "cowrie_sensor": "cowrie-ssh-01",
+        "sha256": "7818858a69df48abface907fbbb9b7bbd4dc8fb8175e6b4092afdc203caacc2f",
+        "ref": {
+          "file": "cowrie.json",
+          "offset": 142192
+        },
+        "event": {
+          "session": "15a94155a0e7",
+          "protocol": "ssh",
+          "src_ip": "172.19.0.1",
+          "src_port": 49338,
+          "dst_ip": "172.19.0.2",
+          "dst_port": 2222,
+          "username": "root",
+          "password": "not-the-password",
+          "eventid": "cowrie.login.failed",
+          "sensor": "cowrie-ssh-01",
+          "uuid": "5458743a-d0ea-11f1-9b92-2aedfafa4905",
+          "timestamp": "2026-10-31T18:29:33.489650Z",
+          "message": "login attempt [root/not-the-password] failed"
+        }
+      }
+    },
+    {
+      "record_type": "event",
+      "schema_version": "ps04.event.v0.1",
+      "event_id": "7e17a1f5-ca1a-5b05-8bd9-5cf7df95c88b",
+      "timestamp": "2026-10-31T18:30:14.264355Z",
+      "ingested_at": "2026-10-31T18:30:14.591289Z",
+      "source_service": "ssh",
+      "source_product": "cowrie",
+      "sensor_id": "cowrie-ssh-01",
+      "source_ip": "172.19.0.1",
+      "source_port": 47802,
+      "dest_ip": "172.19.0.2",
+      "dest_port": 2222,
+      "protocol": "ssh",
+      "session_id": "3ba57e6772dc",
+      "event_type": "shell_command",
+      "category": "command",
+      "outcome": null,
+      "username": null,
+      "password": null,
+      "command": "id; hostname",
+      "message": "CMD: id; hostname",
+      "attack": [
+        {
+          "technique_id": "T1033",
+          "name": "System Owner/User Discovery",
+          "tactic": "discovery"
+        }
+      ],
+      "details": {
+        "command_analysis": {
+          "programs": [
+            "id",
+            "hostname"
+          ],
+          "indicators": [
+            {
+              "technique_id": "T1033",
+              "reason": "runs user/owner discovery tool `id`"
+            }
+          ],
+          "parse_fallback": false
+        }
+      },
+      "scenario_id": null,
+      "raw": {
+        "format": "cowrie-json",
+        "cowrie_eventid": "cowrie.command.input",
+        "cowrie_sensor": "cowrie-ssh-01",
+        "sha256": "cfd8942b55eea97cde40770478c6337391c90326f4e3de981a0d281bfba7c2df",
+        "ref": {
+          "file": "cowrie.json",
+          "offset": 153399
+        },
+        "event": {
+          "session": "3ba57e6772dc",
+          "protocol": "ssh",
+          "src_ip": "172.19.0.1",
+          "src_port": 47802,
+          "dst_ip": "172.19.0.2",
+          "dst_port": 2222,
+          "input": "id; hostname",
+          "eventid": "cowrie.command.input",
+          "sensor": "cowrie-ssh-01",
+          "uuid": "5458743a-d0ea-11f1-9b92-2aedfafa4905",
+          "timestamp": "2026-10-31T18:30:14.264355Z",
+          "message": "CMD: id; hostname"
+        }
+      }
+    },
+    {
+      "record_type": "finding",
+      "schema_version": "ps04.finding.v0.1",
+      "finding_id": "eb09b65e-8d8b-5de7-9240-41dbd34c9504",
+      "rule_id": "SSH-EXEC-001",
+      "rule_name": "Command execution in the emulated shell",
+      "title": "Commands executed in decoy shell (session 3ba57e6772dc)",
+      "severity": "low",
+      "confidence": "high",
+      "created_at": "2026-10-31T18:30:14.591422Z",
+      "first_seen": "2026-10-31T18:30:14.264355Z",
+      "last_seen": "2026-10-31T18:30:14.264355Z",
+      "source_service": "ssh",
+      "sensor_id": "cowrie-ssh-01",
+      "source_ip": "172.19.0.1",
+      "session_ids": [
+        "3ba57e6772dc"
+      ],
+      "username": "backup",
+      "attack": [
+        {
+          "technique_id": "T1059.004",
+          "name": "Command and Scripting Interpreter: Unix Shell",
+          "tactic": "execution"
+        }
+      ],
+      "evidence": {
+        "event_ids": [
+          "7e17a1f5-ca1a-5b05-8bd9-5cf7df95c88b"
+        ],
+        "event_count": 1,
+        "observed": {
+          "first_command": "id; hostname",
+          "username": "backup"
+        },
+        "window_seconds": null,
+        "threshold": null
+      },
+      "explanation": "The client ran commands in Cowrie's emulated Unix shell (first: 'id; hostname'). Commands are emulated and never run on the host.",
+      "recommended_action": "Review the session in the SOC timeline. Any containment (e.g. a lab-only block of the source) is an analyst decision; this sensor takes no automatic action."
+    }
+  ]
+}

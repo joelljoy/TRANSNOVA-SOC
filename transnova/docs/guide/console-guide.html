@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TransNova SOC: Console Guide</title>
+<style>
+@font-face { font-family: "Atkinson"; src: url("../../frontend/node_modules/@fontsource/atkinson-hyperlegible/files/atkinson-hyperlegible-latin-400-normal.woff2") format("woff2"); font-weight: 400; }
+@font-face { font-family: "Atkinson"; src: url("../../frontend/node_modules/@fontsource/atkinson-hyperlegible/files/atkinson-hyperlegible-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
+@font-face { font-family: "JBMono"; src: url("../../frontend/node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2") format("woff2"); }
+@page { size: A4; margin: 16mm 15mm 18mm; }
+:root { --rail:#24413a; --ground:#eceae4; --panel:#fbfaf6; --line:#cfccc2; --soft:#e2dfd6; --ink:#1d2321; --ink2:#47524d; --ink3:#5f6a65; --brass:#a8823a; --red:#9c3b2a; --redbg:#f6e3de; --amber:#6e5112; --amberbg:#f3e8cd; --infobg:#e2ebf1; --info:#24506f; --okbg:#dfece4; --ok:#2a5f45; }
+* { box-sizing: border-box; }
+body { margin:0; font: 10pt/1.5 "Atkinson", system-ui, sans-serif; color: var(--ink); }
+code, .mono { font-family: "JBMono", monospace; font-size: 8.6pt; }
+h1 { font-size: 22pt; line-height: 1.15; margin: 0 0 6pt; letter-spacing: -0.015em; }
+h2 { font-size: 15pt; margin: 0 0 4pt; letter-spacing: -0.01em; color: var(--rail); }
+h3 { font-size: 11pt; margin: 12pt 0 4pt; }
+p { margin: 0 0 6pt; }
+ul { margin: 0 0 8pt; padding-left: 14pt; }
+li { margin: 0 0 2.5pt; }
+.lede { color: var(--ink2); font-size: 10.5pt; }
+section.page { page-break-before: always; }
+.cover { height: 262mm; display: flex; flex-direction: column; justify-content: space-between; background: var(--rail); color: #e4ece8; margin: -16mm -15mm 0; padding: 30mm 22mm 24mm; }
+.cover .name { font-size: 34pt; font-weight: 700; color: #fff; letter-spacing: -0.02em; line-height: 1.05; }
+.cover .sub { font-size: 14pt; color: #b3c6bd; margin-top: 10pt; max-width: 120mm; }
+.cover .meta { font-size: 9.5pt; color: #b3c6bd; border-top: 1px solid #4a6a61; padding-top: 10pt; }
+.cover .drawer { width: 46pt; height: 46pt; border: 3pt solid #fbfaf6; border-radius: 6pt; position: relative; margin-bottom: 18pt; }
+.cover .drawer::before { content:""; position:absolute; left:0; right:0; top:15pt; border-top: 3pt solid #fbfaf6; }
+.cover .drawer::after { content:""; position:absolute; width:9pt; height:9pt; border-radius:50%; background:#c9a24f; left:50%; top:24pt; transform: translateX(-50%); }
+.head { display: flex; align-items: baseline; gap: 8pt; border-bottom: 1px solid var(--line); padding-bottom: 5pt; margin-bottom: 8pt; }
+.head .num { font: 9pt "JBMono", monospace; color: var(--ink3); }
+.box { background: var(--panel); border: 1px solid var(--line); border-radius: 6pt; padding: 9pt 11pt; margin: 6pt 0 9pt; break-inside: avoid; }
+.slip { background: #fff; border: 1px solid var(--line); border-radius: 5pt; padding: 7pt 10pt; margin: 5pt 0; break-inside: avoid; }
+.slip .t { font-weight: 700; }
+.slip .d { border-top: 1px dashed var(--line); margin-top: 4pt; padding-top: 3pt; font-size: 9pt; color: var(--ink2); }
+table { width: 100%; border-collapse: collapse; margin: 4pt 0 10pt; font-size: 9pt; break-inside: auto; }
+th { text-align: left; font-weight: 400; color: var(--ink3); border-bottom: 1px solid var(--line); padding: 4pt 6pt; }
+td { border-bottom: 1px solid var(--soft); padding: 4pt 6pt; vertical-align: top; }
+tr { break-inside: avoid; }
+td:first-child { font-weight: 700; white-space: nowrap; }
+.shot { border: 1px solid var(--line); border-radius: 6pt; overflow: hidden; height: 82mm; margin: 4pt 0 10pt; background: var(--ground); break-inside: avoid; }
+.shot img { width: 100%; display: block; }
+.cap { font-size: 8pt; color: var(--ink3); margin: -6pt 0 10pt; }
+.badge { display: inline-block; border-radius: 99px; padding: 0 6pt; font-size: 8.5pt; line-height: 14pt; background: #ebe9e2; color: var(--ink2); }
+.crit { background: var(--red); color: #fff; } .high { background: var(--redbg); color: var(--red); } .med { background: var(--amberbg); color: var(--amber); }
+.sw { display:inline-block; width:9pt; height:9pt; border-radius:2pt; vertical-align:-1pt; margin-right:3pt; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10pt; }
+.keypoint { border-left: 0; background: var(--okbg); color: var(--ok); border-radius: 6pt; padding: 7pt 10pt; font-size: 9.5pt; margin: 6pt 0 10pt; break-inside: avoid; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div>
+    <div class="drawer"></div>
+    <div class="name">TransNova SOC<br>Console Guide</div>
+    <div class="sub">Every screen, what it offers, and what its data means. For analysts and for the judges watching the demo.</div>
+  </div>
+  <div class="meta">Three-honeypot Security Operations Center: web, MariaDB and Cowrie SSH decoys · React + FastAPI console · Screenshots show live lab data from 2026-11-01</div>
+</div>
+
+<section class="page">
+  <div class="head"><h2>The three ideas behind every screen</h2></div>
+  <div class="box">
+    <p><b>1. Event.</b> One stored record of something a honeypot observed: a page view, a login attempt, a SQL query, a shell command. Events are evidence and are <b>never edited</b>.</p>
+    <p><b>2. Rule match.</b> A detection rule looked at the event and found something of interest. Some rules are <i>signal only</i>: a single failed login is noted but never opens an alert.</p>
+    <p style="margin:0"><b>3. Alert.</b> Opens only when a rule's documented condition is met, such as 5 failed logins in 60 seconds. There is <b>one alert per rule per source</b>; repeat activity updates the existing alert instead of creating duplicates.</p>
+  </div>
+  <p>Everything an analyst decides (a status, a note, a reclassification, an AI explanation) is stored <b>beside</b> the evidence with the analyst's name and the time. Nothing on screen is hardcoded: every number comes from stored data, and empty or unavailable states say so honestly.</p>
+  <div class="keypoint">An event is not an alert, and an alert is not a confirmed incident. One wrong password is an event. A shared IP across honeypots is a lead, not proof of one actor.</div>
+
+  <h3>How data flows</h3>
+  <p>Honeypot interaction → sensor normalises and redacts → collector validates and stores it (before replying) → detection rules evaluated → correlation → alert opened or updated → visible in All events, the source profile and Alerts. Open consoles receive a change notice within about 2 seconds.</p>
+  <table>
+    <tr><th>Container</th><th>Role</th></tr>
+    <tr><td>web-decoy</td><td>Web honeypot; reports its own events</td></tr>
+    <tr><td>database-honeypot + db-sensor</td><td>MariaDB honeypot; the sensor reads the audit log and sends events</td></tr>
+    <tr><td>ssh-honeypot + ssh-sensor</td><td>Cowrie SSH honeypot; the sensor reads Cowrie's log and sends events with its own token</td></tr>
+    <tr><td>collector</td><td>Receives, stores, detects, correlates and serves the data</td></tr>
+    <tr><td>console</td><td>The SOC dashboard at http://127.0.0.1:8501</td></tr>
+  </table>
+  <p>Each honeypot runs in its own container on an isolated network, so a breakout from one reaches neither the others nor the SOC.</p>
+
+  <h3>The rail (left sidebar)</h3>
+  <ul>
+    <li><b>Page links with live counts:</b> total events stored, alerts open or under investigation, and addresses observed.</li>
+    <li><b>Live status:</b> <i>Live updates on</i> (new data appears without a refresh), <i>Connecting…</i>, or <i>Live updates off, refreshing every 10 s</i>.</li>
+    <li><b>Your username, role and Sign out.</b> Signing out is itself recorded as an event.</li>
+  </ul>
+</section>
+
+<section class="page">
+  <div class="head"><span class="num">01</span><h2>Sign in</h2></div>
+  <ul>
+    <li>Every attempt is recorded as a <b>SOC console</b> event: success, failure, sign-out, session expiry and rate limiting.</li>
+    <li>One wrong password is an event, not an attack. <b>Five failures in 10 minutes</b> from one source, or against one username, opens a medium <b>Repeated failed SOC console logins</b> alert.</li>
+    <li>After 10 failures in 10 minutes, sign-in is refused for that source for a while, and that refusal is recorded too.</li>
+    <li>Passwords are never stored or logged, only whether the attempt succeeded.</li>
+  </ul>
+
+  <div class="head" style="margin-top:14pt"><span class="num">02</span><h2>Overview</h2></div>
+  <p class="lede">Answers four questions: is the SOC working, does anything need attention, are the sensors healthy, what should I look at next?</p>
+  <div class="shot"><img src="../../.impeccable/review/desktop-overview.png" alt="Overview page"></div>
+  <ul>
+    <li><b>State strip, in sentences.</b> Collector: events stored and when the newest arrived. Sensors: how many report healthy and which send no heartbeat. Alerts: how many are open or under investigation (red dot if any are high or critical, amber otherwise, green if none). Ingest refusals appear only when the collector rejected sensor data.</li>
+    <li><b>Newest events.</b> The latest 8. The grey timestamps at the top right show the span on screen. A <b>brass dot</b> marks events new since your last visit.</li>
+    <li><b>Events in the last 24 hours.</b> A stacked bar per UTC hour, coloured by honeypot:
+      <span class="sw" style="background:#2f6f9f"></span>web
+      <span class="sw" style="background:#b07a1e"></span>database
+      <span class="sw" style="background:#7d4f9e"></span>SSH
+      <span class="sw" style="background:#2e8a5c"></span>console. Hover for exact counts; an empty hour is genuinely zero.</li>
+    <li><b>Waiting for review.</b> The most important open alerts, shown as <i>determination slips</i>.</li>
+  </ul>
+  <div class="slip"><span class="mono" style="color:#5f6a65">SSH-SEQ-001 · 172.28.0.53</span> <span class="badge crit" style="float:right">critical</span><div class="t">Download, chmod and execute</div><div class="d">det. rule match · confidence high · 1 event · last 03:08:36 · Open</div></div>
+  <p class="cap">How to read a slip: rule ID and source, then the alert title, then the determination line.</p>
+</section>
+
+<section class="page">
+  <div class="head"><span class="num">03</span><h2>All events</h2></div>
+  <p class="lede">Every stored interaction from all three honeypots plus console sign-ins, newest first, 50 per page.</p>
+  <div class="shot"><img src="../../.impeccable/review/desktop-events.png" alt="All events page"></div>
+  <h3>Filters (applied on the server, so they scale)</h3>
+  <ul>
+    <li><b>Search:</b> source address, action, path, command, username or event ID.</li>
+    <li><b>Decoy, Type, Outcome, Rule:</b> dropdown counts come from real stored data.</li>
+    <li><b>Detection:</b> <i>Observed only</i> (no rule matched), <i>Rule matched, no alert</i> (threshold not met, or a signal-only rule), <i>In an alert</i> (evidence for at least one alert).</li>
+    <li><b>From / To:</b> a time range in UTC. Active filters appear as removable chips; "Newest first" flips the order.</li>
+  </ul>
+  <table>
+    <tr><th>Column</th><th>Meaning</th></tr>
+    <tr><td>Time (UTC)</td><td>When the honeypot observed it; brass dot = new since your last visit</td></tr>
+    <tr><td>Event</td><td>First 8 characters of the unique event ID</td></tr>
+    <tr><td>Decoy</td><td>Which honeypot, or the SOC console</td></tr>
+    <tr><td>Source</td><td>Network address it came from; click for the source profile</td></tr>
+    <tr><td>Type</td><td>http request, authentication, sql query, command, connection, file transfer</td></tr>
+    <tr><td>What happened</td><td>One-line summary from the event: <code>GET /admin</code>, the SQL, the command, "login as jdoe"</td></tr>
+    <tr><td>Outcome</td><td>observed, succeeded, failed, or <b>blocked</b> (the server denied it)</td></tr>
+    <tr><td>Detection</td><td>Observed / Rule matched / In an alert, plus any analyst classification</td></tr>
+  </table>
+  <div class="keypoint">Database note: when the MariaDB client connects, it sends <code>select @@version_comment</code>, <code>show databases</code> and <code>show tables</code> by itself. The honeypot records what really reached the server, including traffic the tool sends on its own.</div>
+</section>
+
+<section class="page">
+  <div class="head"><span class="num">03b</span><h2>Event detail</h2></div>
+  <div class="shot"><img src="../../.impeccable/review/desktop-events-detail.png" alt="Event detail page"></div>
+  <ul>
+    <li><b>Observation:</b> every recorded field: exact time, source port, sensor, session ID (click to filter to that session), request with HTTP status, command or query, tables touched, user agent.</li>
+    <li><b>Raw evidence:</b> the sensor's redacted record exactly as stored, shown as plain text, so a <code>&lt;script&gt;</code> payload displays harmlessly and never runs.</li>
+    <li><b>This session</b> and <b>Recent events from the same source</b>.</li>
+    <li><b>Determination:</b> each rule that matched, with rationale, confidence, whether it can open an alert, OWASP category and ATT&amp;CK technique. Analyst classification slips stack below.</li>
+    <li><b>Add a classification</b> (analysts only): Benign, Suspicious, Confirmed malicious, False positive or Unclassified, with a required reason. It adds a slip and never changes the event.</li>
+    <li><b>Alerts that include this event.</b></li>
+  </ul>
+</section>
+
+<section class="page">
+  <div class="head"><span class="num">04</span><h2>Alerts</h2></div>
+  <p class="lede">The triage list, sorted by severity then most recent (switchable to most recent activity). Filters: status, severity, decoy, rule, source and ATT&amp;CK technique.</p>
+  <div class="shot"><img src="../../.impeccable/review/desktop-alerts.png" alt="Alerts page"></div>
+  <table>
+    <tr><th>Column</th><th>Meaning</th></tr>
+    <tr><td>Severity</td><td><span class="badge crit">critical</span> <span class="badge high">high</span> <span class="badge med">medium</span> <span class="badge">low</span>. Red appears only for high and critical.</td></tr>
+    <tr><td>Alert</td><td>Title, rule ID and honeypot</td></tr>
+    <tr><td>Source</td><td>Address the activity came from</td></tr>
+    <tr><td>Events</td><td>How many events have fed this alert</td></tr>
+    <tr><td>Confidence</td><td>How sure the rule is, based on the strength of its evidence</td></tr>
+    <tr><td>ATT&amp;CK</td><td>Technique IDs the rule maps to</td></tr>
+    <tr><td>Last activity</td><td>Most recent supporting event</td></tr>
+    <tr><td>Status</td><td>Open, Under investigation, Confirmed malicious, False positive, Resolved. "New activity since" = events arrived after it was closed</td></tr>
+  </table>
+</section>
+
+<section class="page">
+  <div class="head"><span class="num">04b</span><h2>Alert detail</h2></div>
+  <div class="shot"><img src="../../.impeccable/review/desktop-alerts-detail.png" alt="Alert detail page"></div>
+  <div class="two">
+    <div>
+      <h3 style="margin-top:0">Left column: investigation</h3>
+      <ul>
+        <li><b>Why this alert exists.</b> <i>Rule conclusion:</i> the condition, what happened this time, the evidence the rule needs, how confidence is decided. <i>Limits of this detection:</i> known false positives, what the rule cannot establish, and a reminder that an address is not a person.</li>
+        <li><b>Evidence:</b> the linked events and their time window, including the earlier events that led up to a threshold alert (all 5 failed logins).</li>
+        <li><b>Matched rule conditions:</b> per-event rationale and the field that matched.</li>
+        <li><b>Explainable AI:</b> Claude explains from stored evidence only, split into observed facts (with event IDs), the rule's conclusion, an interpretation marked <i>not verified</i>, benign explanations, supporting and weakening evidence, what can't be established, and safe next steps. It can never change the alert. Without an API key it says "not configured".</li>
+      </ul>
+    </div>
+    <div>
+      <h3 style="margin-top:0">Right column: decisions</h3>
+      <ul>
+        <li><b>Summary:</b> alert ID, source, first and last observed, attack stage, OWASP, recommended action.</li>
+        <li><b>ATT&amp;CK mapping:</b> each technique with name and tactic. <i>Supported by evidence</i> = observed directly; <i>inferred by rule (candidate)</i> = suggested but not proven.</li>
+        <li><b>Disposition</b> (analysts): Start investigating, Confirm malicious, Mark false positive, Resolve, Reopen, Add note only. Confirming or marking a false positive requires a reason.</li>
+        <li><b>Investigation history:</b> who, when, from which status to which, and the note.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="page">
+  <div class="head"><span class="num">05</span><h2>Sources</h2></div>
+  <p class="lede">Every network address the honeypots observed (console sign-ins stay in All events). Columns: source, kind (private, public, loopback, or "session with no address"), honeypots touched, events, sessions, alerts, first and last seen.</p>
+  <div class="shot"><img src="../../.impeccable/review/desktop-sources-detail.png" alt="Source profile page"></div>
+  <h3>Source profile</h3>
+  <ul>
+    <li><b>Attribution notice:</b> an address can be shared, reassigned or translated, so it is not an identified person.</li>
+    <li><b>Timeline:</b> every event from that address, paginated.</li>
+    <li><b>Sessions:</b> session ID, honeypot, username, event count, start time. <b>Bar length is the real session duration</b>, relative to the longest shown.</li>
+    <li><b>Commands seen, Database statements, Web requests:</b> what was actually typed or requested.</li>
+    <li><b>Identity:</b> address, kind, first and last observed, login successes and failures, usernames tried per honeypot.</li>
+    <li><b>Related activity</b> (correlation rules, each with confidence and reason): <i>C-XSVC-01, low</i>: same address on two honeypots within 30 minutes, a lead not proof. <i>C-CAMP-01, high</i>: traffic labelled by the lab simulator. Session links are summarised in one line.</li>
+    <li><b>Techniques observed:</b> ATT&amp;CK techniques linked to their events, marked evidence or rule-inferred. Tool names are deliberately not guessed.</li>
+    <li><b>Alerts</b> involving this source.</li>
+  </ul>
+</section>
+
+<section class="page">
+  <div class="head"><span class="num">06</span><h2>Sensors</h2></div>
+  <p class="lede">Operational health. A sensor is never shown healthy just because it is configured.</p>
+  <div class="shot" style="height:62mm"><img src="../../.impeccable/review/desktop-sensors.png" alt="Sensors page"></div>
+  <table>
+    <tr><th>Column</th><th>Meaning</th></tr>
+    <tr><td>Sensor</td><td><code>web-01</code>, <code>db-01</code>, <code>ssh-01</code>, or <code>soc-auth</code> (the console's audit trail)</td></tr>
+    <tr><td>Health</td><td><b>Healthy</b>: current heartbeat reporting ok · <b>Degraded</b>: sensor says so itself · <b>Stale</b>: no heartbeat for over 45 s · <b>Health unknown</b>: sends events but no heartbeat · <b>Internal</b>: console trail</td></tr>
+    <tr><td>Last heartbeat</td><td>Only db-01 sends heartbeats</td></tr>
+    <tr><td>Last event</td><td>When its newest event arrived</td></tr>
+    <tr><td>Events (5m / 1h / all)</td><td>Throughput</td></tr>
+    <tr><td>Reported details</td><td>What the sensor reports about itself (database reachability, spool backlog)</td></tr>
+  </table>
+  <ul>
+    <li><b>Not heard from:</b> an expected sensor that has sent nothing.</li>
+    <li><b>Ingestion refusals:</b> sensor data rejected since the collector started, with the reason. Refused reads and analyst actions are listed separately.</li>
+    <li><b>Adaptive deception:</b> database decoy tables revealed in response to attacker behaviour, the trigger, and whether the attacker then read them.</li>
+    <li><b>Live sessions</b> reported by the database sensor.</li>
+  </ul>
+</section>
+
+<section class="page">
+  <div class="head"><span class="num">07</span><h2>MITRE ATT&amp;CK</h2></div>
+  <p class="lede">Coverage against the official ATT&amp;CK Enterprise v20.0 dataset (706 techniques). Only techniques a rule can map, or known gaps, are listed. This is not a claim to cover the framework.</p>
+  <div class="shot"><img src="../../.impeccable/review/desktop-mitre.png" alt="MITRE ATT&CK page"></div>
+  <table>
+    <tr><th>Card</th><th>Status</th><th>Meaning</th></tr>
+    <tr><td><span class="sw" style="background:#e2ebf1;border:1px solid #b9cddb"></span>Blue</td><td>Supported by evidence</td><td>A sensor observed the technique directly in stored events</td></tr>
+    <tr><td><span class="sw" style="background:#f3e8cd;border:1px solid #e3c9a0"></span>Amber</td><td>Inferred by a rule</td><td>A rule matched and suggests it; the evidence doesn't prove it</td></tr>
+    <tr><td><span class="sw" style="background:#fff;border:1px solid #cfccc2"></span>White</td><td>Detection ready, not seen</td><td>A rule exists; nothing has triggered it yet</td></tr>
+    <tr><td><span class="sw" style="background:#f4f2ec;border:1px dashed #cfccc2"></span>Dashed</td><td>Known gap</td><td>Plausible for these honeypots, but no rule detects it (port scans, crontab edits)</td></tr>
+  </table>
+  <p>Filter buttons show counts per status. Techniques are grouped by tactic; one technique can appear under several. Clicking one shows its tactics, honeypots, rules, which rules have tests, event counts (observed versus candidate), alerts, a link to attack.mitre.org, the gap reason, and "Show the events". AI explanations never add a mapping here.</p>
+</section>
+
+<section class="page">
+  <div class="head"><span class="num">08</span><h2>OWASP web</h2></div>
+  <p class="lede">Web honeypot traffic classified against the <b>OWASP Top 10:2025</b>, keeping the 2021 label the web sensor originally sent.</p>
+  <div class="shot"><img src="../../.impeccable/review/desktop-owasp.png" alt="OWASP page"></div>
+  <ul>
+    <li><b>Category table:</b> all 10 categories with rules, match count and last match. <i>Rule-based detection</i> means covered; <i>Not observable</i> means honeypot traffic can't show it, and the reason is given (supply chain, cryptography, logging failures).</li>
+    <li><b>Main categories you'll see:</b> A05 Injection (SQL injection, XSS) · A01 Broken Access Control (path traversal, object-ID tampering, SSRF) · A07 Authentication Failures (failed and brute-force logins) · A02 Security Misconfiguration (probes for <code>.env</code>, <code>.git</code>, admin paths).</li>
+    <li><b>Clicking a category</b> lists the matching requests and each rule's logic, evidence, false positives and limits.</li>
+  </ul>
+  <div class="keypoint">A match means the request looked like an attack, never that it succeeded. The decoy has nothing real to exploit.</div>
+
+  <div class="head" style="margin-top:14pt"><span class="num">09</span><h2>Settings</h2></div>
+  <p>Read-only configuration status; nothing is edited from the browser.</p>
+  <ul>
+    <li><b>Your account:</b> username, role, whether you can change alerts, idle sign-out time.</li>
+    <li><b>Connections:</b> collector reachability, read token present and accepted, analyst-action token present, number of accounts, sign-in audit backlog, cookie and session settings. Secrets show only as <i>present</i> or <i>missing</i>, never their values.</li>
+    <li><b>AI explanations:</b> provider, model, configured or not.</li>
+    <li><b>Detection content:</b> rule counts, which can alert, which are signal-only, ATT&amp;CK version, OWASP edition.</li>
+  </ul>
+  <h3>Roles</h3>
+  <ul>
+    <li><b>Viewer:</b> sees everything; cannot change alerts or classify events.</li>
+    <li><b>Analyst and admin:</b> can take every action, each recorded under their name.</li>
+  </ul>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="panel">
+  <h2>Shipment #{{ s.id }}</h2>
+  <dl>
+    <dt>Route</dt><dd>{{ s.origin }} &rarr; {{ s.destination }}</dd>
+    <dt>Status</dt><dd>{{ s.status }}</dd>
+    <dt>ETA</dt><dd>{{ s.eta }}</dd>
+    <dt>Containers</dt><dd>{{ s.containers }}</dd>
+  </dl>
+  <a href="/portal">&larr; Back</a>
+</section>
+{% endblock %}

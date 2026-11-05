@@ -1,0 +1,81 @@
+{
+  "database": "transnova_logistics",
+  "sensitive_tables": ["api_credentials", "admin_accounts", "warehouse_access", "partner_contracts", "internal_network_assets"],
+  "adaptive_tables": ["shipment_archive", "premium_customer_records", "restricted_routes", "backup_credentials",
+                      "warehouse_security_logs", "internal_transfer_records", "executive_shipments", "disaster_recovery_backup"],
+  "system_schemas": ["information_schema", "mysql", "performance_schema", "sys"],
+
+  "severity_thresholds": {"CRITICAL": 75, "HIGH": 50, "MEDIUM": 25, "LOW": 0},
+
+  "categories": {
+    "connection":            {"base": 5,  "stage": "initial_access"},
+    "authentication_failed": {"base": 15, "stage": "credential_access"},
+    "client_noise":          {"base": 1,  "stage": null},
+    "session_control":       {"base": 2,  "stage": null},
+    "reconnaissance":        {"base": 10, "stage": "discovery"},
+    "data_exploration":      {"base": 12, "stage": "collection"},
+    "sensitive_access":      {"base": 50, "stage": "collection"},
+    "adaptive_decoy_access": {"base": 65, "stage": "collection"},
+    "restricted_access":     {"base": 40, "stage": "discovery"},
+    "modification_attempt":  {"base": 45, "stage": "impact"},
+    "schema_change_attempt": {"base": 50, "stage": "impact"},
+    "privilege_attempt":     {"base": 60, "stage": "privilege_escalation"},
+    "file_access_attempt":   {"base": 55, "stage": "collection"},
+    "log_injection_attempt": {"base": 60, "stage": "defense_evasion"},
+    "log_tampering":         {"base": 40, "stage": "defense_evasion"},
+    "unknown":               {"base": 8,  "stage": null}
+  },
+
+  "modifiers": {
+    "repeated_enumeration":  {"points": 15, "threshold": 5,  "reason": "at least 5 enumeration statements from this source"},
+    "multi_table_sweep":     {"points": 10, "threshold": 5,  "reason": "at least 5 distinct tables read by this source"},
+    "multi_sensitive":       {"points": 15, "threshold": 2,  "reason": "at least 2 distinct sensitive tables read by this source"},
+    "repeated_denials":      {"points": 15, "threshold": 3,  "reason": "at least 3 denied statements from this source"},
+    "unbounded_select":      {"points": 5,  "reason": "SELECT with no LIMIT and no WHERE reads the whole table"},
+    "join":                  {"points": 3,  "reason": "JOIN correlates several tables"},
+    "enumeration_then_sensitive": {"points": 10, "reason": "sensitive read follows schema enumeration"},
+    "brute_force":           {"points": 35, "threshold": 5,  "window_seconds": 60, "reason": "at least 5 failed logins from this source within 60 s"}
+  },
+
+  "mitre": {
+    "T1213":     {"name": "Data from Information Repositories", "tactic": "Collection"},
+    "T1087":     {"name": "Account Discovery", "tactic": "Discovery"},
+    "T1552":     {"name": "Unsecured Credentials", "tactic": "Credential Access"},
+    "T1110.001": {"name": "Brute Force: Password Guessing", "tactic": "Credential Access"},
+    "T1110.003": {"name": "Brute Force: Password Spraying", "tactic": "Credential Access"}
+  },
+  "mitre_table_map": {
+    "api_credentials": "T1552", "backup_credentials": "T1552",
+    "admin_accounts": "T1087", "mysql.user": "T1087", "mysql.global_priv": "T1087",
+    "information_schema.user_privileges": "T1087",
+    "partner_contracts": "T1213", "warehouse_access": "T1213", "internal_network_assets": "T1213",
+    "premium_customer_records": "T1213", "executive_shipments": "T1213", "shipment_archive": "T1213",
+    "restricted_routes": "T1213", "warehouse_security_logs": "T1213", "internal_transfer_records": "T1213",
+    "disaster_recovery_backup": "T1213"
+  },
+  "mitre_collection_table_threshold": 5,
+  "spraying_username_threshold": 4,
+
+  "adaptive_rules": [
+    {"id": "A-SHIPMENT-EXPLORATION", "stage": 1,
+     "description": "Repeated exploration of shipment, tracking or customer records",
+     "tables": ["shipments", "shipment_items", "tracking_events", "customers", "delivery_addresses"],
+     "min_queries": 3, "min_distinct_tables": 2,
+     "reveal": ["shipment_archive", "premium_customer_records"]},
+    {"id": "B-CREDENTIAL-EXPLORATION", "stage": 1,
+     "description": "Exploration of API integration, credential or administrative account records",
+     "tables": ["api_integrations", "api_credentials", "admin_accounts"],
+     "min_queries": 2, "min_distinct_tables": 1,
+     "reveal": ["backup_credentials"]},
+    {"id": "C-INFRASTRUCTURE-EXPLORATION", "stage": 1,
+     "description": "Exploration of warehouse access or internal infrastructure records",
+     "tables": ["warehouses", "warehouse_access", "internal_network_assets"],
+     "min_queries": 2, "min_distinct_tables": 2,
+     "reveal": ["warehouse_security_logs", "internal_transfer_records"]},
+    {"id": "D-HIGH-VALUE-TARGETING", "stage": 2,
+     "description": "Sustained interest across several sensitive decoys",
+     "tables_group": "sensitive_and_adaptive",
+     "min_queries": 5, "min_distinct_tables": 3, "requires_rules_fired": 1,
+     "reveal": ["executive_shipments", "restricted_routes", "disaster_recovery_backup"]}
+  ]
+}

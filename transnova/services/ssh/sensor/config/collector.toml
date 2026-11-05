@@ -1,0 +1,91 @@
+# cowrie-soc collector configuration (container defaults).
+# Environment overrides: COWRIE_SOC_SENSOR_ID, COWRIE_SOC_LOG_DIR,
+# COWRIE_SOC_STATE_DB, COWRIE_SOC_HTTP_URL, COWRIE_SOC_HTTP_TOKEN.
+
+[source]
+log_dir = "/data/cowrie-logs"
+base_name = "cowrie.json"
+# "beginning" processes everything already in cowrie.json on first start (no loss);
+# "end" skips history. Only used when there is no saved checkpoint.
+start_position = "beginning"
+poll_interval_seconds = 1.0
+max_line_bytes = 1048576
+batch_max_lines = 500
+
+[collector]
+sensor_id = "ssh-01"
+state_db = "/data/state/collector.db"
+# Ingestion pauses (Cowrie keeps writing to disk) when this many records are undelivered.
+max_pending_records = 100000
+retain_delivered_records = 20000
+# Validated events waiting for the SOC. Beyond this, new events are skipped and counted.
+max_soc_pending = 100000
+# Optional controlled-lab correlation hint copied onto every event (empty = null).
+scenario_id = ""
+
+[normalize]
+# Project rule: tried passwords never reach normalized output (raw.sha256 still covers the
+# original line). SSH-BRUTE-001 therefore reports T1110, not T1110.001 or T1110.003.
+include_passwords = false
+max_field_chars = 4096
+
+[sinks.jsonl]
+enabled = true
+path = "/data/state/normalized.jsonl"
+max_bytes = 52428800
+
+[sinks.http]
+# Disabled until the SOC backend contract exists. Setting COWRIE_SOC_HTTP_URL enables it.
+enabled = false
+url = ""
+token_env = "COWRIE_SOC_HTTP_TOKEN"
+timeout_seconds = 5.0
+batch_size = 50               # the collector refuses more than 50 events
+payload_format = "array"      # the collector takes a plain JSON array
+verify_tls = true
+# Rename top-level fields to match the team schema once it is known, e.g.
+# field_map = { source_ip = "src_ip", session_id = "session" }
+field_map = {}
+headers = {}
+
+# Home directories in the decoy's emulated /etc/passwd (used to resolve relative paths).
+[user_homes]
+backup = "/var/backups"
+
+# ---- Detection rules (all enabled by default; set enabled = false to disable) ----
+
+[detection.ssh_bruteforce]
+threshold = 5
+window_seconds = 60
+severity = "medium"
+spray_min_usernames = 3
+spray_max_passwords = 2
+
+[detection.ssh_decoy_login]
+severity = "medium"
+escalated_severity = "high"
+min_prior_failures = 3
+lookback_seconds = 600
+
+[detection.ssh_shell_activity]
+severity = "low"
+
+[detection.ssh_discovery]
+window_seconds = 300
+levels = [[3, "medium"], [5, "high"]]
+
+[detection.ssh_credential_access]
+severity = "high"
+honeytoken_severity = "critical"
+# Must match the synthetic files baked into cowrie/decoy-fs/.
+honeytoken_paths = ["/var/backups/db/.my.cnf", "/var/backups/app/.env"]
+
+[detection.ssh_ingress_tool_transfer]
+severity = "high"
+
+[detection.ssh_download_execute]
+severity = "critical"
+window_seconds = 300
+
+[detection.ssh_history_tampering]
+severity = "high"

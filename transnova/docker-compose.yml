@@ -1,0 +1,349 @@
+# Team compose: web, database and SSH decoys + collector + TransNova SOC console.
+#
+#   cp .env.example .env        (then set the passwords)
+#   python scripts/make_secrets.py   (tokens and the first console account, in ./secrets)
+#   docker compose up --build -d
+#   open http://127.0.0.1:8501
+#   docker compose --profile attacker up -d db-attacker web-attacker
+#   docker compose --profile attacker run --rm ssh-attacker full
+#
+# The simulator joins later on lab_net (fixed IP 172.28.0.50).
+# Stop the standalone docker-compose.web.yml and services/ssh isolated stacks first: they share subnets.
+#
+# Network paths, which are the isolation design (services/database/README.md):
+#   lab_net      attacker -> decoys. Attackers live here and can reach nothing else.
+#   db_mgmt_net  sensor -> MariaDB (controller account). No attacker on this network.
+#   ingest_net   sensors -> collector. The database container is NOT on it.
+#   soc_edge     console -> collector, and host ports bound to 127.0.0.1.
+#
+# Tokens are Docker secrets (files in ./secrets, never in the image or the environment):
+#   read      console -> collector reads           console   console -> collector analyst actions
+#   ssh       SSH sensor -> collector ingest        users     console accounts (scrypt hashes)
+name: soc-lab
+
+secrets:
+  soc_read_token:
+    file: ./secrets/read.token
+  soc_console_token:
+    file: ./secrets/console.token
+  ssh_ingest_token:
+    file: ./secrets/ssh.token
+  soc_users:
+    file: ./secrets/users.txt
+
+services:
+  database-honeypot:
+    build: ./services/database
+    image: transnova-db-honeypot:dev
+    container_name: database-honeypot
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:?set in .env}
+      MARIADB_DATABASE: transnova_logistics
+      # Time zone tables are unused here, and their bulk load is not worth risking under the
+      # 64K max_allowed_packet.
+      MARIADB_INITDB_SKIP_TZINFO: "1"
+      DECOY_DB_PASSWORD: ${DECOY_DB_PASSWORD:?set in .env}
+      CONTROLLER_DB_PASSWORD: ${CONTROLLER_DB_PASSWORD:?set in .env}
+      CONTROLLER_HOST: 172.29.0.21
+      TZ: UTC
+    volumes:
+      - db-data:/var/lib/mysql
+      - db-logs:/var/log/mysql
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETUID, SETGID, DAC_OVERRIDE, FOWNER]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    mem_limit: 768m
+    networks:
+      lab_net:
+        ipv4_address: 172.28.0.30
+      db_mgmt_net:
+        ipv4_address: 172.29.0.20
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+  db-sensor:
+    build: ./services/database/sensor
+    image: transnova-db-sensor:dev
+    container_name: db-sensor
+    restart: unless-stopped
+    depends_on:
+      database-honeypot:
+        condition: service_healthy
+    environment:
+      SENSOR_ID: db-01
+      AUDIT_LOG_PATH: /var/log/mysql/server_audit.log
+      SENSOR_DATA_DIR: /data
+      COLLECTOR_BASE_URL: http://collector:8000
+      DB_HOST: 172.29.0.20
+      DB_PORT: "3306"
+      DB_DESTINATION_IP: 172.28.0.30
+      CONTROLLER_DB_PASSWORD: ${CONTROLLER_DB_PASSWORD:?set in .env}
+      # user@host pairs that are our own traffic. boot@ (empty host) is MariaDB's first-boot
+      # bootstrap. Never list decoy_user here.
+      INTERNAL_ACCOUNTS: deception_ctrl@172.29.0.21,root@localhost,healthcheck@localhost,mariadb.sys@localhost,boot@
+    volumes:
+      - db-logs:/var/log/mysql:ro
+      - db-sensor-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    mem_limit: 256m
+    networks:
+      db_mgmt_net:
+        ipv4_address: 172.29.0.21
+      ingest_net:
+        ipv4_address: 172.30.0.21
+
+  web-decoy:
+    build:
+      context: ./services/web
+      additional_contexts:
+        anonintel: ./services/anonintel
+    image: transnova-web-decoy:dev
+    restart: unless-stopped
+    environment:
+      COLLECTOR_URL: http://collector:8000/api/events
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    volumes:
+      - web-data:/data
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 256m
+    networks:
+      lab_net:
+        ipv4_address: 172.28.0.10
+      ingest_net:
+        ipv4_address: 172.30.0.10
+    healthcheck:
+      # HTTPS only (the web decoy image sets WEB_DECOY_TLS=1; self-signed cert, loopback check).
+      test: ["CMD", "python", "-c", "import urllib.request,ssl,sys; c=ssl.create_default_context(); c.check_hostname=False; c.verify_mode=ssl.CERT_NONE; sys.exit(0 if urllib.request.urlopen('https://127.0.0.1:8080/health',timeout=2,context=c).status==200 else 1)"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  collector:
+    build:
+      context: .
+      dockerfile: collector/Dockerfile
+    image: soc-collector:dev
+    container_name: collector
+    restart: unless-stopped
+    environment:
+      SOC_READ_TOKEN_FILE: /run/secrets/soc_read_token
+      SOC_CONSOLE_TOKEN_FILE: /run/secrets/soc_console_token
+      SSH_INGEST_TOKEN_FILE: /run/secrets/ssh_ingest_token
+      SSH_SENSOR_PEER: 172.30.0.40
+    secrets: [soc_read_token, soc_console_token, ssh_ingest_token]
+    volumes:
+      - collector-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 1536m
+    pids_limit: 128
+    ports:
+      - "127.0.0.1:8000:8000"
+    networks:
+      ingest_net:
+        ipv4_address: 172.30.0.20
+      soc_edge: {}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=2).status==200 else 1)"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  console:
+    build:
+      context: .
+      dockerfile: console/Dockerfile
+    image: transnova-soc-console:dev
+    container_name: console
+    restart: unless-stopped
+    depends_on:
+      collector:
+        condition: service_healthy
+    environment:
+      COLLECTOR_BASE_URL: http://collector:8000
+      SOC_READ_TOKEN_FILE: /run/secrets/soc_read_token
+      SOC_CONSOLE_TOKEN_FILE: /run/secrets/soc_console_token
+      SOC_USERS_FILE: /run/secrets/soc_users
+      # Optional. Without it, AI explanations say they are unavailable and nothing else changes.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      SOC_AI_MODEL: ${SOC_AI_MODEL:-claude-opus-5-5}
+      SOC_COOKIE_SECURE: ${SOC_COOKIE_SECURE:-false}
+    secrets: [soc_read_token, soc_console_token, soc_users]
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    pids_limit: 128
+    ports:
+      - "127.0.0.1:8501:8501"
+    networks:
+      soc_edge: {}
+
+  # SSH decoy (Cowrie). On lab_net only: attackers reach it, it reaches nothing.
+  ssh-honeypot:
+    build: ./services/ssh/cowrie
+    image: soc-cowrie-ssh:dev
+    container_name: ssh-honeypot
+    restart: unless-stopped
+    environment:
+      COWRIE_HONEYPOT_SENSOR_NAME: ssh-01
+    volumes:
+      - ssh-logs:/cowrie/cowrie-git/var/log/cowrie
+      - ssh-state:/cowrie/cowrie-git/var/lib/cowrie
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+      - /cowrie/cowrie-git/var/lib/cowrie/downloads:size=16m,mode=0700,uid=999,gid=999,noexec,nosuid,nodev
+    logging:
+      driver: none
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    mem_limit: 512m
+    cpus: 1.0
+    networks:
+      lab_net:
+        ipv4_address: 172.28.0.40
+
+  # Reads Cowrie's log volume and delivers to the collector with the SSH ingest token.
+  ssh-sensor:
+    build: ./services/ssh/sensor
+    image: soc-ssh-sensor:dev
+    container_name: ssh-sensor
+    restart: unless-stopped
+    command: ["run", "--config", "/app/config/collector.toml"]
+    depends_on:
+      ssh-honeypot:
+        condition: service_started
+      collector:
+        condition: service_healthy
+    environment:
+      COWRIE_SOC_SENSOR_ID: ssh-01
+      COWRIE_SOC_HTTP_URL: http://collector:8000/api/events
+      COWRIE_SOC_HTTP_TOKEN_FILE: /run/secrets/ssh_ingest_token
+    secrets: [ssh_ingest_token]
+    volumes:
+      - ssh-logs:/data/cowrie-logs:ro
+      - ssh-sensor-data:/data/state
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m
+    logging:
+      driver: local
+      options:
+        max-size: 5m
+        max-file: "2"
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    mem_limit: 256m
+    cpus: 0.5
+    networks:
+      ingest_net:
+        ipv4_address: 172.30.0.40
+
+  # Independent attacker: a genuine MariaDB client on lab_net only.
+  #   docker compose exec db-attacker mariadb -h database-honeypot -u decoy_user -p transnova_logistics
+  db-attacker:
+    image: mariadb:11.4.9
+    container_name: db-attacker
+    profiles: [attacker]
+    command: ["sleep", "infinity"]
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      lab_net:
+        ipv4_address: 172.28.0.51
+
+  # Independent web attacker: curl on lab_net only.
+  #   docker compose exec web-attacker curl -sk https://web-decoy:8080/
+  web-attacker:
+    image: curlimages/curl:8.11.0
+    container_name: web-attacker
+    profiles: [attacker]
+    entrypoint: ["sleep", "infinity"]
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      lab_net:
+        ipv4_address: 172.28.0.52
+
+  # Bounded SSH traffic generator (services/ssh/demo-attacker): fixed scenarios, lab_net only.
+  #   docker compose --profile attacker run --rm ssh-attacker {bruteforce,recon,honeytoken,download,benign,full}
+  ssh-attacker:
+    build: ./services/ssh/demo-attacker
+    image: soc-ssh-demo-attacker:dev
+    profiles: [attacker]
+    environment:
+      DEMO_TARGET_HOST: ssh-honeypot
+      DEMO_TARGET_PORT: "2222"
+      DEMO_ALLOWED_TARGETS: ssh-honeypot
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      lab_net:
+        ipv4_address: 172.28.0.53
+
+networks:
+  lab_net:
+    internal: true
+    driver_opts:
+      com.docker.network.bridge.inhibit_ipv4: "true"
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+  db_mgmt_net:
+    internal: true
+    driver_opts:
+      com.docker.network.bridge.inhibit_ipv4: "true"
+    ipam:
+      config:
+        - subnet: 172.29.0.0/24
+  ingest_net:
+    internal: true
+    driver_opts:
+      com.docker.network.bridge.inhibit_ipv4: "true"
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+  soc_edge: {}
+
+volumes:
+  db-data:
+  db-logs:
+  db-sensor-data:
+  web-data:
+  collector-data:
+  ssh-logs:
+  ssh-state:
+  ssh-sensor-data:

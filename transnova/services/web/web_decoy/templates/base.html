@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="TNL Partner Portal {{ portal_version }}">
+  <title>{% block title %}Partner Portal - TransNova Logistics{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <!-- legacy bundle kept for ERP plugin compatibility: /static/js/portal.js -->
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap bar">
+      <a class="brand" href="/"><img src="/static/logo.svg" alt="" width="24" height="24">TransNova Logistics <span>Partner Portal</span></a>
+      <nav aria-label="Portal">
+        <a href="/search">Track</a>
+        <a href="/status">Service status</a>
+        <a href="/help">Help</a>
+        {% if session %}
+          <a href="/portal">My shipments</a>
+          <a href="/upload">Documents</a>
+          <form class="inline" method="post" action="/logout"><button type="submit" class="linkish">Sign out</button></form>
+        {% else %}
+          <a href="/login">Sign in</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+  <main class="wrap">{% block content %}{% endblock %}</main>
+  <footer class="wrap foot">
+    <span>© 2026 TransNova Logistics · <a href="{{ main_site_url }}">transnova-logistics.example</a> · Service desk +31 10 555 0142 · partners@transnova-logistics.example</span>
+    <span>Portal {{ portal_version }} · <a href="/changelog">Release notes</a> · <a href="/status">Status</a> · eu-north</span>
+  </footer>
+</body>
+</html>
